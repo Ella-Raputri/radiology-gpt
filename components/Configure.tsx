@@ -2,41 +2,28 @@ import { useState } from "react";
 import Dropdown from "./Dropdown";
 import Toggle from "./Toggle";
 import Footer from "./Footer";
-import { SimilarityMetric } from "../app/hooks/useConfiguration";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   useRag: boolean;
   llm: string;
-  similarityMetric: SimilarityMetric;
-  setConfiguration: (useRag: boolean, llm: string, similarityMetric: SimilarityMetric) => void;
+  setConfiguration: (useRag: boolean, llm: string) => void;
 }
 
-const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfiguration }: Props) => {
+const Configure = ({ isOpen, onClose, useRag, llm, setConfiguration }: Props) => {
   const [rag, setRag] = useState(useRag);
   const [selectedLlm, setSelectedLlm] = useState(llm);
-  const [selectedSimilarityMetric, setSelectedSimilarityMetric] = useState<SimilarityMetric>(similarityMetric);
-  
+
   if (!isOpen) return null;
 
   const llmOptions = [
-    { label: 'GPT 3.5 Turbo', value: 'gpt-3.5-turbo' },
-    { label: 'GPT 4', value: 'gpt-4' }
-  ];
-
-  const similarityMetricOptions = [
-    { label: 'Cosine Similarity', value: 'cosine' },
-    { label: 'Euclidean Distance', value: 'euclidean' },
-    { label: 'Dot Product', value: 'dot_product' }
+    { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
+    { label: 'GPT-4o', value: 'gpt-4o' }
   ];
 
   const handleSave = () => {
-    setConfiguration(
-        rag,
-        selectedLlm,
-        selectedSimilarityMetric
-    );
+    setConfiguration(rag, selectedLlm);
     onClose();
   };
 
@@ -50,10 +37,10 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigur
               onClick={onClose}
               className="chatbot-text-primary text-4xl font-thin leading-8"
             >
-              <span aria-hidden>×</span>
+              <span aria-hidden>x</span>
             </button>
           </div>
-          <div className="flex mb-4">
+          <div className="flex mb-4 gap-4">
             <Dropdown
               fieldId="llm"
               label="LLM"
@@ -63,13 +50,6 @@ const Configure = ({ isOpen, onClose, useRag, llm, similarityMetric, setConfigur
             />
             <Toggle enabled={rag} label="Enable vector content (RAG)" onChange={() => setRag(!rag)} />
           </div>
-          <Dropdown
-            fieldId="similarityMetric"
-            label="Similarity Metric"
-            options={similarityMetricOptions}
-            value={selectedSimilarityMetric}
-            onSelect={setSelectedSimilarityMetric}
-          />
         </div>
         <div className="self-end w-full">
           <div className="flex justify-end gap-2">

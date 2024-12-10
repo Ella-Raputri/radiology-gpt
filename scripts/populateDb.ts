@@ -1,15 +1,17 @@
 import { AstraDB } from "@datastax/astra-db-ts";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import 'dotenv/config'
-import sampleData from './sample_data.json';
+import 'dotenv/config';
 import OpenAI from 'openai';
-import { SimilarityMetric } from "../app/hooks/useConfiguration";
+import pdf from 'pdf-parse'; 
+import fs from 'fs';
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const {ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_API_ENDPOINT, ASTRA_DB_NAMESPACE } = process.env;
+const { ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_API_ENDPOINT, ASTRA_DB_NAMESPACE } = process.env;
 
 const astraDb = new AstraDB(ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_API_ENDPOINT, ASTRA_DB_NAMESPACE);
 
@@ -18,47 +20,116 @@ const splitter = new RecursiveCharacterTextSplitter({
   chunkOverlap: 200,
 });
 
-const similarityMetrics: SimilarityMetric[] = [
-  'cosine',
-  'euclidean',
-  'dot_product',
-]
+const SIMILARITY_METRIC = 'cosine';
+const COLLECTION_NAME = 'chat_radiology';
 
-const createCollection = async (similarity_metric: SimilarityMetric = 'cosine') => {
+const pdf_category_mapping: { [filename: string]: string } = {
+    "0_UMUM.pdf": "Penyakit Umum",
+    "1_DARAH_PEMBENTUKAN_DARAH_DAN_SISTEM_IMUN.pdf": "Darah, Pembentukan Darah, dan Sistem Imun",
+    "2_DIGESTIVE.pdf": "Digestive",
+    "3_MATA.pdf": "Mata",
+    "4_TELINGA.pdf": "Digestive",
+    "5_KARDIOVASKULER.pdf": "Kardiovaskuler",
+    "6_MUSKULOSKELETAL.pdf": "Muskuloskeletal",
+    "7_NEUROLOGI.pdf": "Neurologi",
+    "8_PSIKIATRI.pdf": "Psikiatri",
+    "9_RESPIRASI.pdf": "Respirasi",
+    "10_KULIT.pdf": "Kulit",
+    "11_METABOLIK_ENDOKRIN_DAN_NUTRISI.pdf": "Metabolik Endokrin dan Nutrisi",
+    "12_GINJAL_DAN_SALURAN_KEMIH.pdf": "Ginjal dan Saluran Kemih",
+    "13_KESEHATAN_WANITA.pdf": "Kesehatan Wanita",
+    "14_PENYAKIT_KELAMIN.pdf": "Penyakit Kelamin"
+};
+
+async function createCollection() {
   try {
-    const res = await astraDb.createCollection(`chat_${similarity_metric}`, {
+    const res = await astraDb.createCollection(COLLECTION_NAME, {
       vector: {
         dimension: 1536,
-        metric: similarity_metric,
+        metric: SIMILARITY_METRIC
       }
     });
     console.log(res);
   } catch (e) {
-    console.log(`chat_${similarity_metric} already exists`);
+    console.log(`${COLLECTION_NAME} already exists`);
   }
-};
+}
 
-const loadSampleData = async (similarity_metric: SimilarityMetric = 'cosine') => {
-  const collection = await astraDb.collection(`chat_${similarity_metric}`);
-  for await (const { url, title, content} of sampleData) {
-    const chunks = await splitter.splitText(content);
+async function loadPDFsFromDirectory(dir: string): Promise<{ filename: string; text: string; category: string }[]> {
+  const files = fs.readdirSync(dir).filter(file => file.endsWith('.pdf'));
+  const results = [];
+
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const dataBuffer = fs.readFileSync(filePath);
+    const pdfData = await pdf(dataBuffer);
+
+    const category = pdf_category_mapping[file] || "Uncategorized";
+
+    results.push({
+      filename: file,
+      text: pdfData.text,
+      category
+    });
+  }
+
+  return results;
+}
+
+// A helper function to retry an operation if `ECONNRESET` occurs
+async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3, delayMs: number = 2000): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      // Check if error is ECONNRESET or a similar transient error
+      if (error.message && error.message.includes('ECONNRESET')) {
+        attempt++;
+        console.warn(`ECONNRESET encountered. Retrying attempt ${attempt}/${maxRetries} in ${delayMs}ms...`);
+        await new Promise(res => setTimeout(res, delayMs));
+      } else {
+        // Non-transient error: rethrow
+        throw error;
+      }
+    }
+  }
+  throw new Error(`Operation failed after ${maxRetries} retries due to recurring ECONNRESET errors.`);
+}
+
+async function loadData() {
+  const collection = await astraDb.collection(COLLECTION_NAME);
+
+  const pdfDir = './pdfs';
+  const pdfDocs = await loadPDFsFromDirectory(pdfDir);
+
+  for (const doc of pdfDocs) {
+    const chunks = await splitter.splitText(doc.text);
     let i = 0;
     for await (const chunk of chunks) {
-      const {data} = await openai.embeddings.create({input: chunk, model: 'text-embedding-ada-002'});
+      const { data } = await openai.embeddings.create({ input: chunk, model: 'text-embedding-3-small' });
 
-      const res = await collection.insertOne({
-        document_id: `${url}-${i}`,
-        $vector: data[0]?.embedding,
-        url,
-        title,
-        content: chunk
-      });
+      const record = {
+        id: uuidv4(),
+        document_id: doc.filename,
+        chunk_id: `${doc.filename}-${i}`,
+        text: chunk,
+        category: doc.category,
+        $vector: data[0]?.embedding
+      };
+
+      // Use retryOperation to wrap insertOne
+      await retryOperation(() => collection.insertOne(record));
       i++;
     }
   }
-  console.log('data loaded');
-};
 
-similarityMetrics.forEach(metric => {
-  createCollection(metric).then(() => loadSampleData(metric));
-});
+  console.log('All PDF data loaded');
+}
+
+async function run() {
+  await createCollection();
+  await loadData();
+}
+
+run().catch(console.error);
