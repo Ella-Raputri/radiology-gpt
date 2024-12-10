@@ -8,12 +8,12 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 const { ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_API_ENDPOINT, ASTRA_DB_NAMESPACE } = process.env;
 
-const astraDb = new AstraDB(ASTRA_DB_APPLICATION_TOKEN!, ASTRA_DB_API_ENDPOINT!, ASTRA_DB_NAMESPACE!);
+const astraDb = new AstraDB(ASTRA_DB_APPLICATION_TOKEN, ASTRA_DB_API_ENDPOINT, ASTRA_DB_NAMESPACE);
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: 1000,
@@ -21,10 +21,10 @@ const splitter = new RecursiveCharacterTextSplitter({
 });
 
 const SIMILARITY_METRIC = 'cosine';
-const COLLECTION_NAME = 'chat_embeddings';
+const COLLECTION_NAME = 'chat_radiology';
 
 const pdf_category_mapping: { [filename: string]: string } = {
-    "0_PPK_UMUM.pdf": "Penyakit Umum",
+    "0_UMUM.pdf": "Penyakit Umum",
     "1_DARAH_PEMBENTUKAN_DARAH_DAN_SISTEM_IMUN.pdf": "Darah, Pembentukan Darah, dan Sistem Imun",
     "2_DIGESTIVE.pdf": "Digestive",
     "3_MATA.pdf": "Mata",
@@ -76,6 +76,27 @@ async function loadPDFsFromDirectory(dir: string): Promise<{ filename: string; t
   return results;
 }
 
+// A helper function to retry an operation if `ECONNRESET` occurs
+async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3, delayMs: number = 2000): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      // Check if error is ECONNRESET or a similar transient error
+      if (error.message && error.message.includes('ECONNRESET')) {
+        attempt++;
+        console.warn(`ECONNRESET encountered. Retrying attempt ${attempt}/${maxRetries} in ${delayMs}ms...`);
+        await new Promise(res => setTimeout(res, delayMs));
+      } else {
+        // Non-transient error: rethrow
+        throw error;
+      }
+    }
+  }
+  throw new Error(`Operation failed after ${maxRetries} retries due to recurring ECONNRESET errors.`);
+}
+
 async function loadData() {
   const collection = await astraDb.collection(COLLECTION_NAME);
 
@@ -87,14 +108,18 @@ async function loadData() {
     let i = 0;
     for await (const chunk of chunks) {
       const { data } = await openai.embeddings.create({ input: chunk, model: 'text-embedding-3-small' });
-      await collection.insertOne({
+
+      const record = {
         id: uuidv4(),
         document_id: doc.filename,
         chunk_id: `${doc.filename}-${i}`,
         text: chunk,
         category: doc.category,
         $vector: data[0]?.embedding
-      });
+      };
+
+      // Use retryOperation to wrap insertOne
+      await retryOperation(() => collection.insertOne(record));
       i++;
     }
   }

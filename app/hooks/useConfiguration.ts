@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 
-export type SimilarityMetric = "cosine" | "euclidean" | "dot_product";
-
 const useConfiguration = () => {
   // Safely get values from localStorage
   const getLocalStorageValue = (key: string, defaultValue: any) => {
@@ -17,15 +15,11 @@ const useConfiguration = () => {
   };
 
   const [useRag, setUseRag] = useState<boolean>(() => getLocalStorageValue('useRag', 'true') === 'true');
-  const [llm, setLlm] = useState<string>(() => getLocalStorageValue('llm', 'gpt-3.5-turbo'));
-  const [similarityMetric, setSimilarityMetric] = useState<SimilarityMetric>(
-    () => getLocalStorageValue('similarityMetric', 'cosine') as SimilarityMetric
-  );
+  const [llm, setLlm] = useState<string>(() => getLocalStorageValue('llm', 'gpt-4o-mini'));
 
-  const setConfiguration = (rag: boolean, llm: string, similarityMetric: SimilarityMetric) => {
+  const setConfiguration = (rag: boolean, llm: string) => {
     setUseRag(rag);
     setLlm(llm);
-    setSimilarityMetric(similarityMetric);
   }
 
   // Persist to localStorage
@@ -33,14 +27,12 @@ const useConfiguration = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('useRag', JSON.stringify(useRag));
       localStorage.setItem('llm', llm);
-      localStorage.setItem('similarityMetric', similarityMetric);
     }
-  }, [useRag, llm, similarityMetric]);
+  }, [useRag, llm]);
 
   return {
     useRag,
     llm,
-    similarityMetric,
     setConfiguration,
   };
 }
