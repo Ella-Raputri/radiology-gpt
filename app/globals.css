@@ -117,6 +117,12 @@ body {
   background-color: var(--background-bubble-secondary);
   border-radius: 10px;
   border-bottom-left-radius: 0px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  line-height: 1.4;
+  margin-right: 3rem;
+  margin-top: 1rem;
+  margin-left: 1rem;
 }
 
 .talk-bubble.user {
@@ -125,6 +131,10 @@ body {
   background-color: var(--background-bubble-primary);
   border-radius: 10px;
   border-bottom-right-radius: 0px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin-left: 3rem;
+  margin-right: 1rem;
 }
 
 .talk-bubble svg {
@@ -141,6 +151,52 @@ body {
   bottom: 2px;
   transform: translateY(100%);
   fill: var(--background-bubble-primary);
+}
+
+.talk-bubble p {
+  margin: 0; /* Remove default paragraph margins */
+  padding: 0; /* Remove any default padding */
+}
+
+.talk-bubble ol {
+  margin: 0;
+  padding: 0 1.2em; /* Ensure padding is only on the left */
+  list-style-type: decimal;
+  list-style-position: outside;
+  white-space: normal;
+}
+
+.talk-bubble li {
+  margin: 0.5em 0; /* Add vertical spacing between items */
+  padding: 0; /* Avoid unwanted padding */
+}
+
+.talk-bubble ul {
+  margin: 0; /* Remove default margins */
+  padding-left: 1.2em; /* Add padding for indentation */
+  list-style-type: disc; /* Add dots for unordered lists */
+  white-space: normal;
+}
+
+ol {
+  padding-inline-start: 0;
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.talk-bubble h1,
+.talk-bubble h2,
+.talk-bubble h3,
+.talk-bubble h4,
+.talk-bubble h5,
+.talk-bubble h6 {
+  margin: 0; /* Remove heading margins */
+  padding: 0;
+  font-size: 1em; /* Adjust size to be inline with paragraph text */
+}
+
+.talk-bubble br {
+  margin: 0; /* Ensure line breaks don’t add extra space */
 }
 
 .dot-flashing {

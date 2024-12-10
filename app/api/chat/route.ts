@@ -14,7 +14,7 @@ const astraDb = new AstraDB(
 
 export async function POST(req: Request) {
   try {
-    const {messages, useRag, llm, similarityMetric} = await req.json();
+    const {messages, useRag, llm} = await req.json();
 
     const latestMessage = messages[messages?.length - 1]?.content;
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       // Generate embedding for the user's query
       const {data} = await openai.embeddings.create({
         input: latestMessage,
-        model: 'text-embedding-ada-002'
+        model: 'text-embedding-3-small'
       });
 
       // Use the single collection "chat_embeddings"
