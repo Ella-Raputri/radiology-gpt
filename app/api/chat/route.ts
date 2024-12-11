@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
         Instruksi:
         1. Jawablah pertanyaan secara panjang, terstruktur, dan sangat mendetail.
-        2. Apabila informasi berupa gejala-gejala yang dialami pasien, berikan tiga kemungkinan diagnosis berdasarkan informasi tersebut, dengan penjelasan singkat yang menghubungkan gejala dengan setiap diagnosis. Kemudian, berikan saran kepada pasien tentang langkah selanjutnya yang harus dilakukan berdasarkan informasi dalam dokumen, digabungkan dengan pengetahuan Anda.
+        2. Apabila informasi berupa gejala-gejala yang dialami pasien, berikan tiga kemungkinan diagnosis berdasarkan informasi tersebut, dengan penjelasan singkat yang menghubungkan gejala dengan setiap diagnosis. Kemudian, berikan saran kepada dokter untuk investigasi gejala lebih lanjut berdasarkan informasi dalam dokumen, digabungkan dengan pengetahuan Anda.
         3. Jika pertanyaan berkaitan dengan suatu penyakit (misalnya "Pasien terkena TB Paru. Jelaskan..."), berikan penjelasan selengkap dan sedetail mungkin tentang penyakit tersebut, mengacu secara langsung pada informasi yang ada dalam konteks (dokumen). Sertakan informasi tentang etiologi, gejala khas, diagnosa, penatalaksanaan, dan referensi dokumen. Jika tersedia, sebutkan nama file asal informasi tersebut.
         4. Apabila informasi bukan berupa gejala tetapi pertanyaan umum, jawablah secara lengkap dan rujuk sumber informasi dari dokumen dengan menyebutkan nama file.
         5. Jika Anda tidak yakin dengan jawaban (informasi tidak terdapat dalam konteks) atau pertanyaan kurang spesifik, katakan Anda tidak yakin dengan jawaban Anda.
