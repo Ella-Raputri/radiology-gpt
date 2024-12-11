@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         model: llm ?? 'gpt-4o-mini',
         stream: true,
         messages: [...ragPrompt, ...messages],
-        max_tokens: 3000, // Allow for a longer answer
+        max_tokens: 5000, // Allow for a longer answer
         temperature: 0.2  // Lower temperature for more detailed and focused response
       }
     );
