@@ -4,7 +4,7 @@ This project is a starter for creating a chatbot using Astra DB and OpenAI. It's
 
 ## Features
 
-- **Astra DB Integration**: Store and retrieve data from your Astra DB database with ease.
+- **Astra DB Integration**: Store and retrieve data from your Astra DB database with ease
 - **OpenAI Integration**: Leverage the power of OpenAI to generate intelligent responses.
 - **Easy Deployment**: Deploy your chatbot to Vercel with just a few clicks.
 - **Customizable**: Modify and extend the chatbot to suit your needs.
