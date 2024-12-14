@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@datastax/astra-db-ts": "0.1.4",
     "@types/node": "^20.8.10",
     "ai": "^2.2.20",
