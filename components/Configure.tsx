@@ -20,9 +20,9 @@ const Configure = ({ isOpen, onClose, useRag, llm, setConfiguration }: Props) =>
   const llmOptions = [
     { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
     { label: 'GPT-4o', value: 'gpt-4o' },
-    {label: 'Claude 3 Haiku', value: 'claude-3-5-haiku'},
+    {label: 'Claude 3.5 Haiku', value: 'claude-3-5-haiku'},
     {label: 'Claude 3 opus', value: 'claude-3-opus'},
-    {label: 'Claude 3 sonnet', value: 'claude-3-5-sonnet'}
+    {label: 'Claude 3.5 sonnet', value: 'claude-3-5-sonnet'}
 
   ];
 
