@@ -1,9 +1,14 @@
+import { Anthropic } from "@anthropic-ai/sdk";
+import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { AstraDB } from "@datastax/astra-db-ts";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 const astraDb = new AstraDB(
@@ -40,8 +45,6 @@ export async function POST(req: Request) {
       const documents = await cursor.toArray();
       
       // Join the top documents as context
-      // If documents contain metadata like filename, ensure each doc has a reference to it.
-      // For now, we assume 'document_id' field exists or we add disclaimers if not.
       docContext = documents?.map(doc => {
         const filename = doc.category || "dokumen tidak diketahui";
         return `Sumber: ${filename}\n${doc.text}\n`;
@@ -73,19 +76,81 @@ export async function POST(req: Request) {
       },
     ];
 
-    const response = await openai.chat.completions.create(
-      {
-        model: llm ?? 'gpt-4o-mini',
+    // Determine which LLM to use
+    console.log('Using LLM:', llm);
+    if (llm === 'gpt-4o-mini' || !llm) {
+      // OpenAI (GPT-4o-mini) implementation
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
         stream: true,
         messages: [...ragPrompt, ...messages],
-        max_tokens: 5000, // Allow for a longer answer
-        temperature: 0.2  // Lower temperature for more detailed and focused response
-      }
-    );
+        max_tokens: 5000,
+        temperature: 0.2
+      });
 
-    const stream = OpenAIStream(response);
-    return new StreamingTextResponse(stream);
+      const stream = OpenAIStream(response);
+      return new StreamingTextResponse(stream);
+    } else if (llm.startsWith('claude-')) {
+      const anthropicModel = (() => {
+        switch (llm) {
+          case 'claude-3-opus':
+            return 'claude-3-opus-20240229';
+          case 'claude-3-sonnet':
+            return 'claude-3-sonnet-20240229';
+          case 'claude-3-5-haiku':
+          default:
+            return 'claude-3-5-haiku-20241022';
+        }
+      })();
+
+      console.log('Using Anthropic model:', anthropicModel);
+
+      const stream = await anthropic.messages.create({
+        model: anthropicModel,
+        max_tokens: 4096,
+        messages: [
+          { role: 'user', content: ragPrompt[0].content + '\n\n' + messages[messages.length - 1].content }
+        ],
+        stream: true
+      });
+      console.log('Anthropic stream:', stream);
+
+      const textStream = new ReadableStream({
+        async start(controller) {
+          for await (const messageStream of stream) {
+            if (messageStream.type === 'content_block_delta' && 'delta' in messageStream) {
+              const delta = messageStream.delta;
+              if ('text' in delta) {
+                controller.enqueue(delta.text);
+              }
+            }
+          }
+          controller.close();
+        }
+      });
+
+      console.log('Anthropic text stream:', textStream);
+
+      return new StreamingTextResponse(textStream);
+    }
+    else if (llm === 'gpt-4o' || !llm) {
+      // OpenAI (GPT-4o-mini) implementation
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        stream: true,
+        messages: [...ragPrompt, ...messages],
+        max_tokens: 5000,
+        temperature: 0.2
+      });
+
+      const stream = OpenAIStream(response);
+      return new StreamingTextResponse(stream); 
+    }
+    else {
+      throw new Error(`Unsupported LLM: ${llm}`);
+    }
   } catch (e) {
+    console.error('Error in medical AI processing:', e);
     throw e;
   }
 }
