@@ -57,9 +57,9 @@ export async function POST(req: Request) {
         role: 'system',
         content: `
         Anda adalah asisten medis yang membantu menjawab pertanyaan berdasarkan informasi berikut:
-        START CONTEXT
+        ${useRag ? `START CONTEXT
         ${docContext}
-        END CONTEXT
+        END CONTEXT` : ''}
 
         Instruksi:
         1. Jawablah pertanyaan secara panjang, terstruktur, dan sangat mendetail.
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
         6. Jangan menambahkan informasi di luar konteks yang diberikan.
         7. Pastikan jawaban akurat, berdasarkan pedoman klinis resmi atau dokumen yang tersedia.
         8. Berikan peringatan bahwa ini bukan pengganti nasihat medis profesional dan pasien harus berkonsultasi dengan dokter untuk diagnosis dan perawatan yang akurat.
-        9. Di akhir jawaban, sampaikan bahwa jawaban diambil berdasarkan Keputusan Menteri Kesehatan Republik Indonesia Nomor HK.01.07/MENKES/1186/2022 tentang Panduan Praktik Klinis bagi Dokter di Fasilitas Pelayanan Kesehatan Tingkat Pertama.
+        ${ useRag ? '9. Di akhir jawaban, sampaikan bahwa jawaban diambil berdasarkan Keputusan Menteri Kesehatan Republik Indonesia Nomor HK.01.07/MENKES/1186/2022 tentang Panduan Praktik Klinis bagi Dokter di Fasilitas Pelayanan Kesehatan Tingkat Pertama.' : '' }
 
         Pastikan jawaban mencakup seluruh konteks relevan dari dokumen yang diberikan. Susun jawaban dengan paragraf yang jelas, dan cantumkan nama file dokumen jika tersedia. Berikan detail yang selengkap-lengkapnya.`
       },
