@@ -54,7 +54,7 @@ export default function Home() {
             </div>
           </div>
           <p className="chatbot-text-secondary-inverse text-sm md:text-base mt-2 md:mt-4">
-            Chat with the RadiologyGPT using GPT-4o or GPT-4o mini model by OpenAI. If vector content (RAG) is enabled, responses will be augmented with relevant vector-based context.
+            Selamat datang di RadiologyGPT. Tanyakan semua keluhan pasien dan dapatkan jawaban yang Anda butuhkan dalam hitungan detik.
           </p>
         </div>
         <div className='flex-1 relative overflow-y-auto my-4 md:my-6'>
