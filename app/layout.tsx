@@ -2,8 +2,8 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
 export const metadata = {
-  title: "RadiologyGPT",
-  description: "RadiologyGPT - AI Medical Assistant",
+  title: "AnamnesaGPT",
+  description: "AnamnesaGPT - AI Medical Assistant",
 };
 
 export default function RootLayout({ children }) {
