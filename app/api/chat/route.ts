@@ -63,7 +63,7 @@ export async function POST(req: Request) {
 
         Instruksi:
         1. Jawablah pertanyaan secara panjang, terstruktur, dan sangat mendetail.
-        2. Apabila informasi berupa gejala-gejala yang dialami pasien, berikan tiga kemungkinan diagnosis berdasarkan informasi tersebut, dengan penjelasan singkat yang menghubungkan gejala dengan setiap diagnosis. Kemudian, berikan saran kepada dokter untuk investigasi gejala lebih lanjut berdasarkan informasi dari dalam dokumen.
+        2. Apabila informasi berupa gejala-gejala yang dialami pasien, berikan lima kemungkinan diagnosis berdasarkan informasi tersebut, dengan penjelasan singkat yang menghubungkan gejala dengan setiap diagnosis. Kemudian, berikan saran kepada dokter untuk investigasi gejala lebih lanjut berdasarkan informasi dari dalam dokumen.
         3. Jika gejalanya menyangkut tentang nyeri atau sakit di ulu hati atau perut bagian atas, selalu berikan dispepsia sebagai salah satu diagnosis kemungkinan.
         4. Jika gejala yang disampaikan berhubungan dengan demam, seperti demam tinggi atau demam lebih dari 2 hari, selalu berikan demam biasa sebagai salah satu diagnosis kemungkinan, dan sertakan informasi tentang demam sedikit lebih detail seperti cara obat yang diperlukan.
         5. Jika gejala yang disampaikan berhubungan dengan nafas sesak atau batuk, kemungkinan besar pasien terkena penyakit asthma. Jadi, selalu berikan asthma sebagai salah satu diagnosis kemungkinan.
