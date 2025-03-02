@@ -149,6 +149,76 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response);
       return new StreamingTextResponse(stream); 
     }
+    else if (llm === 'deepseek-v3' || !llm) {
+      console.log('Using DeepSeek via OpenRouter');
+      // console.log(ragPrompt[0].content + '\n\n' + messages[messages.length - 1].content)
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://radiologi.com',
+          'X-Title': 'Radiology GPT',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "model": "deepseek/deepseek-chat:free",
+          "messages": [
+            {
+              "role": "user",
+              "content": ragPrompt[0].content + '\n\n' + messages[messages.length - 1].content
+            }
+          ],
+          stream: true
+        })
+      });
+
+      console.log(response);
+
+      if (!response.ok) {
+        console.error('DeepSeek API error:', await response.text());
+        throw new Error('Failed to fetch response from DeepSeek');
+      }
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+    
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              break;
+            }
+    
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+    
+            for (const line of lines) {
+              const message = line.replace(/^data: /, '');
+              if (message === '[DONE]') {
+                continue;
+              }
+    
+              try {
+                const parsed = JSON.parse(message);
+                if (parsed.choices && parsed.choices[0] && parsed.choices[0].delta) {
+                  const content = parsed.choices[0].delta.content;
+                  if (content) {
+                    controller.enqueue(content);
+                  }
+                }
+              } catch (error) {
+                console.error('Error parsing JSON:', error);
+              }
+            }
+          }
+        }
+      });
+    
+      return new StreamingTextResponse(stream);
+    }
     else {
       throw new Error(`Unsupported LLM: ${llm}`);
     }
