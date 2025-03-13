@@ -149,9 +149,18 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response);
       return new StreamingTextResponse(stream); 
     }
-    else if (llm === 'deepseek-v3' || !llm) {
+    else if (llm === 'deepseek-v3' || llm === 'deepseek-r1' || !llm) {
       console.log('Using DeepSeek via OpenRouter');
       // console.log(ragPrompt[0].content + '\n\n' + messages[messages.length - 1].content)
+      
+      const deepseekModel = (() => {
+        switch (llm) {
+          case 'deepseek-r1':
+            return "deepseek/deepseek-r1:free"; //deepseek R1
+          default:
+            return "deepseek/deepseek-chat:free"; //deepseek V3
+        }
+      })();
 
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -162,7 +171,7 @@ export async function POST(req: Request) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          "model": "deepseek/deepseek-chat:free",
+          "model": deepseekModel,
           "messages": [
             {
               "role": "user",
@@ -172,8 +181,6 @@ export async function POST(req: Request) {
           stream: true
         })
       });
-
-      console.log(response);
 
       if (!response.ok) {
         console.error('DeepSeek API error:', await response.text());
