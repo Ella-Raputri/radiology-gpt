@@ -24,6 +24,7 @@ const Configure = ({ isOpen, onClose, useRag, llm, setConfiguration }: Props) =>
     {label: 'Claude 3 opus', value: 'claude-3-opus'},
     {label: 'Claude 3.5 sonnet', value: 'claude-3-5-sonnet'},
     {label: 'Deepseek V3', value: 'deepseek-v3'},
+    {label: 'Qwen 2.5 72B', value: 'qwen-2-5-72b'}
   ];
 
   const handleSave = () => {
