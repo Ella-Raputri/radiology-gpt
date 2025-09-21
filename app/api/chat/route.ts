@@ -149,6 +149,75 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response);
       return new StreamingTextResponse(stream); 
     }
+    else if (llm === 'deepseek-v3' || !llm) {
+      console.log('Using DeepSeek via OpenRouter');
+      const deepseekModel = "deepseek/deepseek-chat-v3.1:free";
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          "model": deepseekModel,
+          "messages": [
+            {
+              "role": "user",
+              "content": ragPrompt[0].content + '\n\n' + messages[messages.length - 1].content
+            }
+          ],
+          stream: true
+        })
+      });
+
+      if (!response.ok) {
+        console.error('DeepSeek API error:', await response.text());
+        throw new Error('Failed to fetch response from DeepSeek');
+      }
+
+      const stream = new ReadableStream({
+        async start(controller) {
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+    
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              controller.close();
+              break;
+            }
+    
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n').filter(line => line.trim() !== '');
+            
+            let buffer = '';
+            for (const line of lines) {
+              if (line.startsWith(':')) continue;
+
+              if (line.startsWith('data:')) {
+                const message = line.replace(/^data: /, '').trim();
+                if (message === '[DONE]') continue;
+                buffer += message;
+
+                try {
+                  const parsed = JSON.parse(buffer);
+                  buffer = '';
+
+                  if (parsed.choices?.[0]?.delta?.content) {
+                    controller.enqueue(parsed.choices[0].delta.content);
+                  }
+                } catch (error) {
+                  console.error('Error parsing JSON:', error, 'Message:', message);
+                }
+              }
+            }
+          }
+        }
+      });
+    
+      return new StreamingTextResponse(stream);
+    }
     else {
       throw new Error(`Unsupported LLM: ${llm}`);
     }
