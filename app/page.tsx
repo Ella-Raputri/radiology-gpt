@@ -9,7 +9,7 @@ import ThemeButton from '../components/ThemeButton';
 import useConfiguration from './hooks/useConfiguration';
 
 export default function Home() {
-  const { append, messages, input, handleInputChange, handleSubmit } = useChat();
+  const { append, messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const { useRag, llm, setConfiguration } = useConfiguration();
   
   const messagesEndRef = useRef(null);
@@ -65,15 +65,55 @@ export default function Home() {
         {!messages || messages.length === 0 && (
           <PromptSuggestionRow onPromptClick={handlePrompt} />
         )}
-        <form className='flex h-[40px] gap-2' onSubmit={handleSend}>
-          <input onChange={handleInputChange} value={input} className='chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2' placeholder='Send a message...' />
-          <button type="submit" className='chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3'>
-            <svg width="20" height="20" viewBox="0 0 20 20">
-              <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
-            </svg>
-            <span className='hidden origin:block font-semibold text-sm ml-2'>Send</span>
-          </button>
-        </form>
+
+        <form className="flex h-[40px] gap-2" onSubmit={handleSend}>
+            <input
+              onChange={handleInputChange}
+              value={input}
+              disabled={isLoading} 
+              className="chatbot-input flex-1 text-sm md:text-base outline-none bg-transparent rounded-md p-2"
+              placeholder="Send a message..."
+            />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`chatbot-send-button flex rounded-md items-center justify-center px-2.5 origin:px-3 ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              {isLoading ? (
+                // Spinner / loading state
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 20 20">
+                    <path d="M2.925 5.025L9.18333 7.70833L2.91667 6.875L2.925 5.025ZM9.175 12.2917L2.91667 14.975V13.125L9.175 12.2917ZM1.25833 2.5L1.25 8.33333L13.75 10L1.25 11.6667L1.25833 17.5L18.75 10L1.25833 2.5Z" />
+                  </svg>
+                  <span className="hidden origin:block font-semibold text-sm ml-2">Send</span>
+                </>
+              )}
+            </button>
+          </form>
+
         <Footer modelName={llm}/>
       </section>
     </main>
