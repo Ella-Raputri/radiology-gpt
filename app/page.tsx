@@ -74,7 +74,7 @@ export default function Home() {
             <span className='hidden origin:block font-semibold text-sm ml-2'>Send</span>
           </button>
         </form>
-        <Footer />
+        <Footer modelName={llm}/>
       </section>
     </main>
     <Configure

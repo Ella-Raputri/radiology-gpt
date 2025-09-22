@@ -71,7 +71,7 @@ const Configure = ({ isOpen, onClose, useRag, llm, setConfiguration }: Props) =>
               Save Configuration
             </button>
           </div>
-          <Footer />
+          <Footer modelName={selectedLlm}/>
         </div>
       </div>
     </div>

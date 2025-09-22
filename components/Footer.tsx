@@ -1,7 +1,10 @@
 
-const Footer = () => {
+const Footer = ({modelName}) => {
   return (
     <footer className="chatbot-text-tertiary flex justify-between text-sm mt-6">
+      <div className="flex flex-row items-start">
+        Chosen model: {modelName}
+      </div>
       <div className="ml-auto flex flex-row items-center">
         <span className="mr-1">Powered by</span>
         <svg aria-label="DataStax logotype" width="87" height="9" viewBox="0 0 87 9" fill="none" xmlns="http://www.w3.org/2000/svg">
