@@ -96,10 +96,10 @@ export async function POST(req: Request) {
     } else if (llm.startsWith('claude-')) {
       const anthropicModel = (() => {
         switch (llm) {
-          case 'claude-3-opus':
-            return 'claude-3-opus-20240229';
-          case 'claude-3-sonnet':
-            return 'claude-3-sonnet-20240229';
+          case 'claude-4-1-opus':
+            return 'claude-opus-4-1-20250805';
+          case 'claude-4-sonnet':
+            return 'claude-sonnet-4-20250514';
           case 'claude-3-5-haiku':
           default:
             return 'claude-3-5-haiku-20241022';
