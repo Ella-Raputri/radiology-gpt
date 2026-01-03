@@ -149,14 +149,14 @@ export async function POST(req: Request) {
       const stream = OpenAIStream(response);
       return new StreamingTextResponse(stream); 
     }
-    else if (llm === 'deepseek-v3' || llm === 'qwen-2-5-72b' || !llm) {
+    else if (llm === 'deepseek-r1' || llm === 'qwen3-4b' || !llm) {
       console.log(`Using ${llm} via OpenRouter`);
       const llmModel = (() => {
         switch (llm) {
-          case 'qwen-2-5-72b':
-            return "qwen/qwen-2.5-72b-instruct:free"; //qwen
+          case 'qwen3-4b':
+            return "qwen/qwen3-4b:free"; //qwen
           default:
-            return "deepseek/deepseek-chat-v3.1:free"; //deepseek V3
+            return "deepseek/deepseek-r1-0528:free"; //deepseek V3
         }
       })();
 
