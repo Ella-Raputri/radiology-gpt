@@ -1,21 +1,15 @@
 import { Anthropic } from "@anthropic-ai/sdk";
-import { AstraDB } from "@datastax/astra-db-ts";
 import OpenAI from 'openai';
 import { OpenAIStream, StreamingTextResponse } from 'ai';
+import { RadiologyFields, retrieve } from "../../../lib/rag";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
-
-const astraDb = new AstraDB(
-  process.env.ASTRA_DB_APPLICATION_TOKEN!,
-  process.env.ASTRA_DB_API_ENDPOINT!,
-  process.env.ASTRA_DB_NAMESPACE!
-);
 
 export async function POST(req: Request) {
   try {
@@ -26,36 +20,14 @@ export async function POST(req: Request) {
     let docContext = '';
 
     if (useRag) {
-      // Generate embedding for the user's query
-      console.log('masuk sini')
-      const { data } = await openai.embeddings.create({
-        input: latestMessage,
-        model: 'text-embedding-3-small'
-      });
+      const documents = await retrieve(latestMessage);
 
-      // Use the single collection "chat_radiology"
-      const collection = await astraDb.collection("chat_radiology");
-
-      // Perform a vector similarity search
-      const cursor = collection.find(null, {
-        sort: {
-          $vector: data[0]?.embedding,
-        },
-        limit: 5,
-      });
-
-      const documents = await cursor.toArray();
-      
-      // Join the top documents as context
-      docContext = documents?.map(doc => {
-        const filename = doc.category || "dokumen tidak diketahui";
-        return `Sumber: ${filename}\n${doc.text}\n`;
-      }).join("\n") || '';
-
-      console.log('selesai RAG.')
+      docContext = documents.map(doc => {
+          const fields = doc.fields as RadiologyFields;
+          return `Sumber: ${fields.source} Halaman: ${fields.page+1} ${fields.text}`;
+      }).join("\n\n");
     }
 
-    // Enhanced instructions for thoroughness and detail
     const ragPrompt = [
       {
         role: 'system',
@@ -83,7 +55,6 @@ export async function POST(req: Request) {
       },
     ];
 
-    // Determine which LLM to use
     console.log('Using LLM:', llm);
     if (llm === 'gpt-4o-mini' || !llm) {
       // OpenAI (GPT-4o-mini) implementation
@@ -185,8 +156,8 @@ export async function POST(req: Request) {
       });
 
       if (!response.ok) {
-        console.error('DeepSeek API error:', await response.text());
-        throw new Error('Failed to fetch response from DeepSeek');
+        console.error('API error:', await response.text());
+        throw new Error(`Failed to fetch response from ${llm}`);
       }
 
       const stream = new ReadableStream({
