@@ -10,7 +10,7 @@ import useConfiguration from './hooks/useConfiguration';
 
 export default function Home() {
   const { append, messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
-  const { useRag, llm, setConfiguration } = useConfiguration();
+  const { useRag, llm, loaded, setConfiguration } = useConfiguration();
   
   const messagesEndRef = useRef(null);
   const [configureOpen, setConfigureOpen] = useState(false);
@@ -31,6 +31,10 @@ export default function Home() {
     const msg: Message = { id: crypto.randomUUID(), content: promptText, role: 'user' };
     append(msg, { options: { body: { useRag, llm } } });
   };
+
+  if(!loaded){
+    return <div className='flex h-screen w-full items-center justify-center text-[24px]'>Loading...</div>
+  }
 
   return (
     <>

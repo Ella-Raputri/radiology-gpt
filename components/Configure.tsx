@@ -20,11 +20,11 @@ const Configure = ({ isOpen, onClose, useRag, llm, setConfiguration }: Props) =>
   const llmOptions = [
     { label: 'GPT-4o mini', value: 'gpt-4o-mini' },
     { label: 'GPT-4o', value: 'gpt-4o' },
-    {label: 'Claude 3.5 Haiku', value: 'claude-3-5-haiku'},
-    {label: 'Claude 4.1 opus', value: 'claude-4-1-opus'},
-    {label: 'Claude 4 sonnet', value: 'claude-4-sonnet'},
-    {label: 'Deepseek R1', value: 'deepseek-r1'},
-    {label: 'Qwen 3 4B', value: 'qwen3-4b'}
+    {label: 'Claude 4.5 Haiku', value: 'claude-haiku-4-5'},
+    {label: 'Claude 4.8 opus', value: 'claude-opus-4-8'},
+    {label: 'Claude 4.6 sonnet', value: 'claude-sonnet-4-6'},
+    // {label: 'Deepseek R1', value: 'deepseek-r1'},
+    {label: 'Qwen 3 Next 80B A3B Instruct', value: 'qwen3-next-80b'}
   ];
 
   const handleSave = () => {

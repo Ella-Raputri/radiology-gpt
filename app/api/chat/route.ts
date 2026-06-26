@@ -20,12 +20,14 @@ const astraDb = new AstraDB(
 export async function POST(req: Request) {
   try {
     const { messages, useRag, llm } = await req.json();
+    console.log('llm nya', llm);
 
     const latestMessage = messages[messages?.length - 1]?.content;
     let docContext = '';
 
     if (useRag) {
       // Generate embedding for the user's query
+      console.log('masuk sini')
       const { data } = await openai.embeddings.create({
         input: latestMessage,
         model: 'text-embedding-3-small'
@@ -49,6 +51,8 @@ export async function POST(req: Request) {
         const filename = doc.category || "dokumen tidak diketahui";
         return `Sumber: ${filename}\n${doc.text}\n`;
       }).join("\n") || '';
+
+      console.log('selesai RAG.')
     }
 
     // Enhanced instructions for thoroughness and detail
@@ -96,13 +100,13 @@ export async function POST(req: Request) {
     } else if (llm.startsWith('claude-')) {
       const anthropicModel = (() => {
         switch (llm) {
-          case 'claude-4-1-opus':
-            return 'claude-opus-4-1-20250805';
-          case 'claude-4-sonnet':
-            return 'claude-sonnet-4-20250514';
-          case 'claude-3-5-haiku':
+          case 'claude-opus-4-8':
+            return 'claude-opus-4-8';
+          case 'claude-sonnet-4-6':
+            return 'claude-sonnet-4-6';
+          case 'claude-haiku-4-5':
           default:
-            return 'claude-3-5-haiku-20241022';
+            return 'claude-haiku-4-5-20251001';
         }
       })();
 
@@ -153,8 +157,8 @@ export async function POST(req: Request) {
       console.log(`Using ${llm} via OpenRouter`);
       const llmModel = (() => {
         switch (llm) {
-          case 'qwen3-4b':
-            return "qwen/qwen3-4b:free"; //qwen
+          case 'qwen3-next-80b':
+            return "qwen/qwen3-next-80b-a3b-instruct:free"; //qwen
           default:
             return "deepseek/deepseek-r1-0528:free"; //deepseek V3
         }
